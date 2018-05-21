@@ -50,32 +50,34 @@ public class CartService {
 				newCartData = new Cart();
 			}
 
-			final CartProductMapper cartProductMapper = new CartProductMapper();
+			CartProductMapper existingProduct = newCartData.getCartProductMapper().stream()
+					.filter(p -> p.getProduct().getId() == pid).findAny().orElse(null);
+			if (existingProduct != null) {
+				existingProduct.setQuantity(existingProduct.getQuantity() + 1);
+				newCartData.setUpdated(new Date());
+			} else {
 
-			newCartData.setCustomer(customer);
+				final CartProductMapper cartProductMapper = new CartProductMapper();
 
-			newCartData.getCartProductMapper().add(cartProductMapper);
-			product.getCartProductMapper().add(cartProductMapper);
+				newCartData.setCustomer(customer);
 
-			cartProductMapper.setCart(newCartData);
-			cartProductMapper.setProduct(product);
-			cartProductMapper.setQuantity(1);
+				newCartData.getCartProductMapper().add(cartProductMapper);
+				product.getCartProductMapper().add(cartProductMapper);
 
-			// newCartData.getProducts().add(product);
-			// product.getCart().add(newCartData);
-			customer.setCart(newCartData);
+				cartProductMapper.setCart(newCartData);
+				cartProductMapper.setProduct(product);
+				cartProductMapper.setQuantity(1);
 
-			customer.setCreated(new Date());
-			customer.setUpdated(new Date());
-			newCartData.setCreated(new Date());
-			newCartData.setUpdated(new Date());
+				customer.setCart(newCartData);
 
-			iCart.addProductToCart(newCartData);
-			iCart.addCartProducttoMapper(cartProductMapper);
-			/*
-			 * if (ret < 1) throw new CustomException("Unable to ad product To cart");
-			 */
+				customer.setCreated(new Date());
+				customer.setUpdated(new Date());
+				newCartData.setCreated(new Date());
+				newCartData.setUpdated(new Date());
 
+				iCart.addProductToCart(newCartData);
+				iCart.addCartProducttoMapper(cartProductMapper);
+			}
 		} catch (final Exception e) {
 			logger.error(e);
 			e.printStackTrace();
@@ -141,16 +143,16 @@ public class CartService {
 		try {
 			Customer cust = iCustomer.getCustomerById(custId);
 			cart = cust.getCart();
-			if(cart ==null){
+			if (cart == null) {
 				throw new CustomException("No Cart Exist for this Customer");
 			}
 		} catch (CustomException e) {
 			logger.error(e);
 			throw new CustomException(e.getMessage());
 		}
-		
+
 		return cart;
-		
+
 	}
 
 	@Transactional
@@ -159,23 +161,23 @@ public class CartService {
 		try {
 			Customer cust = iCustomer.getCustomerById(custId);
 			cart = cust.getCart();
-			if(cart ==null){
+			if (cart == null) {
 				throw new CustomException("No Cart Exist for this Customer");
 			}
-			
-			CartProductMapper prod = cart.getCartProductMapper().stream()
-					.filter(p -> p.getProduct().getId() == pid).findAny().orElse(null);
-			
-			if(prod ==null)
+
+			CartProductMapper prod = cart.getCartProductMapper().stream().filter(p -> p.getProduct().getId() == pid)
+					.findAny().orElse(null);
+
+			if (prod == null)
 				throw new CustomException("Product does not exist in the cart");
-				
+
 			iCartProductMapper.removeCartProductMapper(prod);
-			
+
 		} catch (CustomException e) {
 			logger.error(e);
 			throw new CustomException(e.getMessage());
 		}
-		
+
 		return true;
 	}
 }
